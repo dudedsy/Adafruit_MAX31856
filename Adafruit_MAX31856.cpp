@@ -119,17 +119,16 @@ void Adafruit_MAX31856::oneShotTemperature(void) {
   delay(250); // MEME FIX autocalculate based on oversampling
 }
 
-float Adafruit_MAX31856::readCJTemperature(void) {
+int16_t Adafruit_MAX31856::readCJTemperature(void) {
   oneShotTemperature();
 
   int16_t temp16 = readRegister16(MAX31856_CJTH_REG);
-  float tempfloat = temp16;
-  tempfloat /= 256.0;
+  temp16 /= 26;
 
-  return tempfloat;
+  return temp16;
 }
 
-float Adafruit_MAX31856::readThermocoupleTemperature(void) {
+int16_t Adafruit_MAX31856::readThermocoupleTemperature(void) {
   oneShotTemperature();
 
   int32_t temp24 = readRegister24(MAX31856_LTCBH_REG);
@@ -140,10 +139,9 @@ float Adafruit_MAX31856::readThermocoupleTemperature(void) {
 
   temp24 >>= 5;  // bottom 5 bits are unused
 
-  float tempfloat = temp24;
-  tempfloat *= 0.0078125;
+  temp24 /= 13; //temperature in tenths of degrees C (1001 = 100.1 deg C)
 
-  return tempfloat;
+  return (int16_t) temp24;
 }
 
 /**********************************************/
