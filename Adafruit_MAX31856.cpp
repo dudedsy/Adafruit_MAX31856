@@ -89,14 +89,14 @@ void Adafruit_MAX31856::setColdJunctionFaultThreshholds(int8_t low, int8_t high)
   writeRegister8(MAX31856_CJHF_REG, high);
 }
 
-void Adafruit_MAX31856::setTempFaultThreshholds(float flow, float fhigh) {
-  int16_t low, high;
-
-  flow *= 16;
-  low = flow;
-
-  fhigh *= 16;
-  high = fhigh;
+void Adafruit_MAX31856::setTempFaultThreshholds(int16_t dlow, int16_t dhigh) {
+  int32 templow, temphigh;
+  
+  templow = 16 * dlow;
+  dlow = templow / 10;
+    
+  temphigh = dhigh * 16;
+  dhigh = temphigh / 10;
 
   writeRegister8(MAX31856_LTHFTH_REG, high >> 8);
   writeRegister8(MAX31856_LTHFTL_REG, high);
