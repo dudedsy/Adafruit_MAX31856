@@ -140,7 +140,7 @@ float Adafruit_MAX31856::readThermocoupleTemperature(void) {
   else{temp24 >>= 8;}  // bottom 8 bits are unused rest is a positive integer 16ths of a degree C
 
   float tempfloat = temp24;
-  tempfloat *= 0.0625
+  tempfloat *= 0.0625;
 
   return tempfloat;
 }
