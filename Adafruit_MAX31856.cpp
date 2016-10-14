@@ -84,9 +84,17 @@ uint8_t Adafruit_MAX31856::readFault(void) {
   return readRegister8(MAX31856_SR_REG);
 }
 
-void Adafruit_MAX31856::setColdJunctionFaultThreshholds(int8_t low, int8_t high) {
-  writeRegister8(MAX31856_CJLF_REG, low);
-  writeRegister8(MAX31856_CJHF_REG, high);
+void Adafruit_MAX31856::setColdJunctionFaultThreshholds(int16_t low, int16_t high) {
+  int32_t llow, lhigh;
+  
+  llow = 10*low;
+  int8_t clow = llow/256;
+  
+  lhigh = 10*high;
+  int8_t chigh = lhigh/256;
+  
+  writeRegister8(MAX31856_CJLF_REG, clow);
+  writeRegister8(MAX31856_CJHF_REG, chigh);
 }
 
 void Adafruit_MAX31856::setTempFaultThreshholds(int16_t dlow, int16_t dhigh) {
@@ -98,11 +106,11 @@ void Adafruit_MAX31856::setTempFaultThreshholds(int16_t dlow, int16_t dhigh) {
   temphigh = dhigh * 16;
   dhigh = temphigh / 10;
 
-  writeRegister8(MAX31856_LTHFTH_REG, high >> 8);
-  writeRegister8(MAX31856_LTHFTL_REG, high);
+  writeRegister8(MAX31856_LTHFTH_REG, dhigh >> 8);
+  writeRegister8(MAX31856_LTHFTL_REG, dhigh);
 
-  writeRegister8(MAX31856_LTLFTH_REG, low >> 8);
-  writeRegister8(MAX31856_LTLFTL_REG, low);
+  writeRegister8(MAX31856_LTLFTH_REG, dlow >> 8);
+  writeRegister8(MAX31856_LTLFTL_REG, dlow);
 }
 
 void Adafruit_MAX31856::oneShotTemperature(void) {
@@ -121,10 +129,9 @@ void Adafruit_MAX31856::oneShotTemperature(void) {
 
 int16_t Adafruit_MAX31856::readCJTemperature(void) {
   oneShotTemperature();
-
   int16_t temp16 = readRegister16(MAX31856_CJTH_REG);
-  temp16 /= 26;
-
+  int32_t temptemp = temp16 * 10;
+  temp16 = temptemp / 256;
   return temp16;
 }
 
@@ -133,15 +140,14 @@ int16_t Adafruit_MAX31856::readThermocoupleTemperature(void) {
 
   int32_t temp24 = readRegister24(MAX31856_LTCBH_REG);
   if (temp24 & 0x800000) {
-    temp24 &= ~0x800000; // remove that bit
-    temp24 *= -1;        // set sign
+    int16_t temptemp = temp24 >> 8; //bottom 8 bits unused, what's there is a negative two's complement in 16ths
+    temp24 = temptemp // put it back in a bigger int
   }
-
-  temp24 >>= 5;  // bottom 5 bits are unused
-
-  temp24 /= 13; //temperature in tenths of degrees C (1001 = 100.1 deg C)
-
-  return (int16_t) temp24;
+  else{temp24 >>= 8;}  // bottom 8 bits are unused rest is a positive integer 16ths of a degree C
+    temp24 *= 10;  // multiply by ten to capture tenths
+    temp24 /= 16; // divide by 16 to get temperature in tenths of degrees C (1001 = 100.1 deg C)
+  
+  return (int16_t) temp24; //casting as an int16 will capture the temp range handily
 }
 
 /**********************************************/
