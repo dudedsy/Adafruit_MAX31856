@@ -138,16 +138,18 @@ int16_t Adafruit_MAX31856::readCJTemperature(void) {
 int16_t Adafruit_MAX31856::readThermocoupleTemperature(void) {
   oneShotTemperature();
 
-  int32_t temp24 = readRegister24(MAX31856_LTCBH_REG);
-  if (temp24 & 0x800000) {
-    int16_t temptemp = temp24 >> 8; //bottom 8 bits unused, what's there is a negative two's complement in 16ths
-    temp24 = temptemp // put it back in a bigger int
-  }
-  else{temp24 >>= 8;}  // bottom 8 bits are unused rest is a positive integer 16ths of a degree C
-    temp24 *= 10;  // multiply by ten to capture tenths
-    temp24 /= 16; // divide by 16 to get temperature in tenths of degrees C (1001 = 100.1 deg C)
+  int32_t temp24 = readRegister24(MAX31856_LTCBH_REG); //read input from thermocouple, 24 bits
   
-  return (int16_t) temp24; //casting as an int16 will capture the temp range handily
+  //middle two bytes are the number as a 16 bit two's complement int
+  (uint8_t*) bytearray = (uint8_t *) temp24;
+  int16_t temp16 = bytearray[1];
+  temp16 <<= 8;
+  temp16 |= bytearray[2];
+  
+    temp24 = temp16 * 10;  // multiply by ten to capture tenths
+    temp16 = temp24 / 16; // divide by 16 to get temperature in tenths of degrees C (1001 = 100.1 deg C)
+  
+  return temp16; 
 }
 
 /**********************************************/
