@@ -133,13 +133,13 @@ float Adafruit_MAX31856::readThermocoupleTemperature(void) {
   oneShotTemperature();
 
   int32_t temp24 = readRegister24(MAX31856_LTCBH_REG);
-  if (temp24 & 0x800000) {
-    int16_t temptemp = temp24 >> 8; // bottom 8 bits unused, what's left is a two's complement in 16ths
-    temp24 = temptemp;
-  }
-  else{temp24 >>= 8;}  // bottom 8 bits are unused rest is a positive integer 16ths of a degree C
+  //middle two bytes are the number as an int16_t
+  (uint8_t*) bytearray = (uint8_t *) temp24;
+  int16_t temptemp = bytearray[1];
+  temptemp <<= 8;
+  temptemp |= bytearray[2];
 
-  float tempfloat = temp24;
+  float tempfloat = temptemp;
   tempfloat *= 0.0625;
 
   return tempfloat;
