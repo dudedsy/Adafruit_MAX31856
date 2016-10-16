@@ -134,13 +134,20 @@ float Adafruit_MAX31856::readThermocoupleTemperature(void) {
 
   int32_t temp24 = readRegister24(MAX31856_LTCBH_REG);
   //middle two bytes are the number as an int16_t
-  (uint8_t*) bytearray = (uint8_t *) temp24;
-  int16_t temptemp = bytearray[1];
-  temptemp <<= 8;
-  temptemp |= bytearray[2];
-
-  float tempfloat = temptemp;
-  tempfloat *= 0.0625;
+  union{
+    uint8_t ba[4];
+    int32_t i;
+  }data;
+  data.i = temp24;
+  
+  //move the bytes to the right spot
+  uint16_t temp16u = data.ba[2];
+  temp16u <<= 8;
+  temp16u |= data.ba[1];
+  
+  //convert from int 16ths to float degrees
+  float tempfloat = (int16_t) temp16u;
+  tempfloat *= 0.0625; //convert from 16ths to decimal degrees
 
   return tempfloat;
 }
