@@ -130,10 +130,11 @@ float Adafruit_MAX31856::readCJTemperature(void) {
 }
 
 float Adafruit_MAX31856::readThermocoupleTemperature(void) {
+  //get the temperature code
   oneShotTemperature();
-
   int32_t temp24 = readRegister24(MAX31856_LTCBH_REG);
-  //middle two bytes are the number as an int16_t
+  
+  //middle two bytes are the temperature * 16 encoded as a 16bit twos complement signed integer
   union{
     uint8_t ba[4];
     int32_t i;
@@ -147,11 +148,10 @@ float Adafruit_MAX31856::readThermocoupleTemperature(void) {
   
   //convert from int 16ths to float degrees
   float tempfloat = (int16_t) temp16u;
-  tempfloat *= 0.0625; //convert from 16ths to decimal degrees
+  tempfloat *= 0.0625; 
 
   return tempfloat;
 }
-
 
 /**********************************************/
 
@@ -234,7 +234,6 @@ void Adafruit_MAX31856::writeRegister8(uint8_t addr, uint8_t data) {
 
   digitalWrite(_cs, HIGH);
 }
-
 
 
 uint8_t Adafruit_MAX31856::spixfer(uint8_t x) {
