@@ -138,27 +138,15 @@ int16_t Adafruit_MAX31856::readCJTemperature(void) {
 int16_t Adafruit_MAX31856::readThermocoupleTemperature(void) {
   oneShotTemperature();
 
-  int32_t temp24 = readRegister24(MAX31856_LTCBH_REG); //read input from thermocouple, 24 bits
+  int32_t code = readRegister24(MAX31856_LTCBH_REG); //read input from thermocouple, 24 bits
+  if (code & 0x800000){
+    code |= 0xFF000000; //fill in two's complement
+  } 
   
-  //middle two bytes have two's complement of temp 
-  //in 16ths of a degC
-  union{
-    uint8_t ba[4];
-    int32_t i;
-  }data;
-  data.i = code;
+  code *= 10; 
+  code >>= 12;
   
-  //move the bytes to the right spot
-  //Processor is LSByte First
-  uint16_t temp16u = data.ba[2];
-  temp16u <<= 8;
-  temp16u |= data.ba[1];
-  int32_t temp32 = (int16_t) temp16u;
-  
-  //access the tenths and divide out the 16ths
-  temp32 *= 10;
-  temp32 /= 16; 
-  return temp32;
+  return code;
 }
 
 /**********************************************/
